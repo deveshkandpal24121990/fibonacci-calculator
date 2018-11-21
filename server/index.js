@@ -37,12 +37,21 @@ app.get('/', (req, res) => {
 });
 
 app.get('/values/all', async (req, res) => {
+    console.log("RECEIVED REQUEST FOR ALL");
 const values =  await pgClient.query("SELECT * FROM values");
+
 res.send(values.rows);
 });
 
 app.get('/values/current', async(req, res) => {
+    console.log("RECEIVED REQUEST FOR CURRENT");
     redisClient.hgetall('values', (err, values) => {
+        if(err) {
+            console.log('ERROR WHILE DOING A CURRENT CALL');
+            throw err;
+        } else {
+            console.log("CURRENT VALUES FOUND");
+        }
         res.send(values);
     });
 });
@@ -53,7 +62,7 @@ app.post('/values', async (req,res) => {
         return res.status(422).send('Index too high');
     }
 
-    redisClient.htset('values', index, 'Nothing yet!');  
+    redisClient.hset('values', index, 'Nothing yet!');  
     redisPublisher.publish('insert', index);
     pgClient.query('INSERT INTO values(number) VALUES($1)', [index]);
 
