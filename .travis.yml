@@ -1,0 +1,21 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t devesh24/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run devesh24/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t devesh24/multi-client ./client
+  - docker build -t devesh24/multi-ngingx ./nginx
+  - docker build -t devesh24/multi-server ./server
+  - docker build -t devesh24/multi-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push devesh24/multi-client
+  - docker push devesh24/multi-ngingx
+  - docker push devesh24/multi-server
+  - docker push devesh24/multi-worker
+
